@@ -4,6 +4,7 @@ import com.sweeter.domain.Role;
 import com.sweeter.domain.User;
 import com.sweeter.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +27,10 @@ public class UserService implements UserDetailsService {
     @Autowired
     private MailSender mailSender;
 
+    @Value("${hostname}")
+    private String hostname;
+
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
@@ -46,7 +51,7 @@ public class UserService implements UserDetailsService {
         user.setRoles(Collections.singleton(Role.USER));
         user.setActivationCode(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
+//        user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
 
         sendMessage(user);
@@ -58,8 +63,9 @@ public class UserService implements UserDetailsService {
         if (!StringUtils.isEmpty(user.getEmail())) {
             String message = String.format(
                     "Hello, %s! \n" +
-                            "Welcome to Sweeter. Please visit http://localhost:8080/activate/%s",
+                            "Welcome to Sweeter. Please visit http://%s/activate/%s",
                     user.getUsername(),
+                    hostname,
                     user.getActivationCode()
             );
 
